@@ -1,34 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet version="1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mods="http://www.loc.gov/mods/v3" exclude-result-prefixes="mods" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:srw_dc="info:srw/schema/1/dc-schema" xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<?xml version="1.0" encoding="utf-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mods="http://www.loc.gov/mods/v3" exclude-result-prefixes="mods"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:srw_dc="info:srw/schema/1/dc-schema"
+	xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-	<!-- 
-    Version 1.8		2015-03-05 tmee@loc.gov
-    				Typo mods:provence changed to mods:province
-    
-	Version 1.7 	2015-01-30 ws
-					Changed dc:creator to dc:contributor if mods:name/mods:roleTerm != creator
-					Fixed xpath bug in dc:subject output for mods:subject/mods:titleInfo/mods:title
-					Fixed xpath bug in dc:format when mods:extent | mods:form | mods:internetMediaType [@unit]
-					Fixedbug in xpath for @type
-					
-	Version 1.6		2015-01-30 schema location change: 
+<!-- 
+	Version 1.4		2015-01-30 schema location change: 
     				http://www.loc.gov/standards/sru/recordSchemas/dc-schema.xsd
-        
-	Version 1.5		2014-07-23 tmee@loc.gov
-					Fixed subject transformation to eliminate empty element output
-		
-	Version 1.4		2013-12-13 tmee@loc.gov
-					Upgraded to MODS 3.5
-		
+
 	Version 1.3		2013-12-09 tmee@loc.gov
-					Fixed date transformation for dates without start/end points
+	Fixed date transformation for dates without start/end points
 	
 	Version 1.2		2012-08-12 WS 
-					Upgraded to MODS 3.4
+	Upgraded to MODS 3.4
 	
-	Version 1.1	2007-05-18 tmee@loc.gov
-					Added modsCollection conversion to DC SRU
-					Updated introductory documentation
+	Revision 1.1	2007-05-18 tmee@loc.gov
+	Added modsCollection conversion to DC SRU
+	Updated introductory documentation
 	
 	Version 1.0		2007-05-04 tmee@loc.gov
 	
@@ -56,30 +46,30 @@
 -->
 
 	<xsl:output method="xml" indent="yes"/>
-
+	
 	<xsl:template match="/">
 		<xsl:choose>
 			<!-- WS: updated schema location -->
-			<xsl:when test="//mods:modsCollection">
-				<srw_dc:dcCollection xsi:schemaLocation="info:srw/schema/1/dc-schema http://www.loc.gov/standards/sru/recordSchemas/dc-schema.xsd">
-					<xsl:apply-templates/>
-					<xsl:for-each select="mods:modsCollection/mods:mods">
-						<srw_dc:dc xsi:schemaLocation="info:srw/schema/1/dc-schema http://www.loc.gov/standards/sru/recordSchemas/dc-schema.xsd">
-							<xsl:apply-templates/>
-						</srw_dc:dc>
-					</xsl:for-each>
-				</srw_dc:dcCollection>
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:for-each select="mods:mods">
-					<oai_dc:dc xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
-						<xsl:apply-templates/>
-					</oai_dc:dc>
-				</xsl:for-each>
-			</xsl:otherwise>
+		<xsl:when test="//mods:modsCollection">			
+			<srw_dc:dcCollection xsi:schemaLocation="info:srw/schema/1/dc-schema http://www.loc.gov/standards/sru/recordSchemas/dc-schema.xsd">
+				<xsl:apply-templates/>
+			<xsl:for-each select="mods:modsCollection/mods:mods">			
+				<srw_dc:dc xsi:schemaLocation="info:srw/schema/1/dc-schema http://www.loc.gov/standards/sru/recordSchemas/dc-schema.xsd">
+				<xsl:apply-templates/>
+			</srw_dc:dc>
+			</xsl:for-each>
+			</srw_dc:dcCollection>
+		</xsl:when>
+		<xsl:otherwise>
+			<xsl:for-each select="mods:mods">
+			<oai_dc:dc xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+				<xsl:apply-templates/>
+			</oai_dc:dc>
+			</xsl:for-each>
+		</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
-
+	
 	<xsl:template match="mods:titleInfo">
 		<dc:title>
 			<xsl:value-of select="mods:nonSort"/>
@@ -102,30 +92,31 @@
 		</dc:title>
 	</xsl:template>
 
-	<!-- tmee mods 3.5 -->
 	<xsl:template match="mods:name">
-		<xsl:choose>
-			<xsl:when test="mods:role/mods:roleTerm[@type='text']='creator' or mods:role/mods:roleTerm[@type='code']='cre' ">
+		<!--<xsl:choose>-->
+			  <!-- HK, origin version
+          <xsl:when test="mods:role/mods:roleTerm[@type='text']='creator' or mods:role/mods:roleTerm[@type='code']='cre' ">
+        --> 
+		<xsl:if test="@type='personal'">
+			<xsl:choose>
+			<xsl:when test="mods:role/mods:roleTerm[@type='text']='author'">
 				<dc:creator>
 					<xsl:call-template name="name"/>
-					<xsl:choose>
-						<xsl:when test="mods:etal">
-							<xsl:value-of select="."/>
-						</xsl:when>
-						<xsl:otherwise>
-							<xsl:text>et al</xsl:text>
-						</xsl:otherwise>
-					</xsl:choose>
 				</dc:creator>
 			</xsl:when>
-			<xsl:otherwise>
-				<!-- ws  1.7 -->
+			<!-- HK, added contributor mapping-->
+			<xsl:when test="mods:role/mods:roleTerm[@type='text']!='author'">
 				<dc:contributor>
 					<xsl:call-template name="name"/>
-						<xsl:if test="mods:etal">et al.</xsl:if>
+				</dc:contributor>
+			</xsl:when>			
+			<xsl:otherwise>
+				<dc:contributor>
+					<xsl:call-template name="name"/>
 				</dc:contributor>
 			</xsl:otherwise>
-		</xsl:choose>
+			</xsl:choose>
+		</xsl:if>
 	</xsl:template>
 
 	<xsl:template match="mods:classification">
@@ -134,45 +125,42 @@
 		</dc:subject>
 	</xsl:template>
 
-	<!-- ws 1.7  -->
-	<xsl:template match="mods:subject">
-		<xsl:if test="mods:topic | mods:occupation | mods:name">
+	<xsl:template match="mods:subject[mods:topic | mods:name | mods:occupation | mods:geographic | mods:hierarchicalGeographic | mods:cartographics | mods:temporal] ">
+		
+		<xsl:for-each select="mods:topic">
 			<dc:subject>
-				<xsl:for-each select="mods:topic | mods:occupation">
-					<xsl:value-of select="."/>
-					<xsl:if test="position()!=last()">--</xsl:if>
-				</xsl:for-each>
-				<xsl:for-each select="mods:name">
-					<xsl:call-template name="name"/>
-				</xsl:for-each>
+				<xsl:value-of select="."/>				
 			</dc:subject>
-		</xsl:if>
-		<xsl:for-each select="mods:titleInfo">
+		</xsl:for-each> 			 
+			
+
+		<xsl:for-each select="mods:titleInfo/mods:title">
 			<dc:subject>
-				<xsl:for-each select="child::*">
-					<xsl:value-of select="."/>
-					<xsl:if test="following-sibling::*"><xsl:text> </xsl:text></xsl:if>
-				</xsl:for-each>
+				<xsl:value-of select="mods:titleInfo/mods:title"/>
 			</dc:subject>
 		</xsl:for-each>
+
 		<xsl:for-each select="mods:geographic">
 			<dc:coverage>
 				<xsl:value-of select="."/>
 			</dc:coverage>
 		</xsl:for-each>
+
 		<xsl:for-each select="mods:hierarchicalGeographic">
 			<dc:coverage>
-				<xsl:for-each select="mods:continent|mods:country|mods:province|mods:region|mods:state|mods:territory|mods:county|mods:city|mods:island|mods:area">
+				<xsl:for-each select="mods:continent|mods:country|mods:provence|mods:region|mods:state|mods:territory|mods:county|mods:city|mods:island|mods:area">
 					<xsl:value-of select="."/>
 					<xsl:if test="position()!=last()">--</xsl:if>
 				</xsl:for-each>
 			</dc:coverage>
 		</xsl:for-each>
+
 		<xsl:for-each select="mods:cartographics/*">
 			<dc:coverage>
 				<xsl:value-of select="."/>
 			</dc:coverage>
 		</xsl:for-each>
+
 		<xsl:if test="mods:temporal">
 			<dc:coverage>
 				<xsl:for-each select="mods:temporal">
@@ -181,6 +169,7 @@
 				</xsl:for-each>
 			</dc:coverage>
 		</xsl:if>
+
 		<xsl:if test="*[1][local-name()='topic'] and *[local-name()!='topic']">
 			<dc:subject>
 				<xsl:for-each select="*[local-name()!='cartographics' and local-name()!='geographicCode' and local-name()!='hierarchicalGeographic'] ">
@@ -191,7 +180,8 @@
 		</xsl:if>
 	</xsl:template>
 
-	<xsl:template match="mods:abstract | mods:tableOfContents | mods:note">
+    <!-- <xsl:template match="mods:abstract | mods:tableOfContents | mods:note">  -->
+	<xsl:template match="mods:abstract | mods:tableOfContents">
 		<dc:description>
 			<xsl:value-of select="."/>
 		</dc:description>
@@ -199,14 +189,22 @@
 
 	<xsl:template match="mods:originInfo">
 		<xsl:apply-templates select="*[@point='start']"/>
-		<xsl:apply-templates select="*[not(@point)]"/>
-		<xsl:for-each select="mods:publisher">
+		<xsl:for-each
+			select="mods:dateIssued[@point!='start' and @point!='end'] |mods:dateCreated[@point!='start' and @point!='end'] | mods:dateCaptured[@point!='start' and @point!='end'] | mods:dateOther[@point!='start' and @point!='end']">
+			<dc:date>
+				<xsl:value-of select="."/>
+			</dc:date>
+		</xsl:for-each>
+		<xsl:apply-templates select="*[not(@point)]"/> 
+		    
+		<xsl:for-each select="mods:publisher"> 
 			<dc:publisher>
 				<xsl:value-of select="."/>
 			</dc:publisher>
 		</xsl:for-each>
-	</xsl:template>
-
+	
+	</xsl:template>	
+	
 	<xsl:template match="mods:dateIssued | mods:dateCreated | mods:dateCaptured">
 		<dc:date>
 			<xsl:choose>
@@ -223,18 +221,18 @@
 			</xsl:choose>
 		</dc:date>
 	</xsl:template>
-
+	
 	<xsl:template match="mods:dateIssued[@point='start'] | mods:dateCreated[@point='start'] | mods:dateCaptured[@point='start'] | mods:dateOther[@point='start'] ">
 		<xsl:variable name="dateName" select="local-name()"/>
 		<dc:date>
 			<xsl:value-of select="."/>-<xsl:value-of select="../*[local-name()=$dateName][@point='end']"/>
 		</dc:date>
 	</xsl:template>
-
+	
 	<xsl:template match="mods:temporal[@point='start']  ">
 		<xsl:value-of select="."/>-<xsl:value-of select="../mods:temporal[@point='end']"/>
 	</xsl:template>
-
+	
 	<xsl:template match="mods:temporal[@point!='start' and @point!='end']  ">
 		<xsl:value-of select="."/>
 	</xsl:template>
@@ -296,17 +294,11 @@
 	<xsl:template match="mods:physicalDescription">
 		<xsl:for-each select="mods:extent | mods:form | mods:internetMediaType">
 			<dc:format>
-				<!-- tmee mods 3.5 -->
-				<xsl:variable name="unit" select="translate(@unit,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')"/>
-				<!-- ws 1.7 -->
-				<xsl:if test="@unit">
-					<xsl:value-of select="$unit"/>: 
-				</xsl:if>
 				<xsl:value-of select="."/>
 			</dc:format>
 		</xsl:for-each>
 	</xsl:template>
-	<!--
+<!--
 	<xsl:template match="mods:mimeType">
 		<dc:format>
 			<xsl:value-of select="."/>
@@ -321,19 +313,14 @@
 				<xsl:when test="contains(.,':')">
 					<xsl:value-of select="."/>
 				</xsl:when>
-				<!-- ws 1.7  -->
 				<xsl:when test="@type">
-					<xsl:choose>
-						<xsl:when test="@type">
-							<xsl:value-of select="$type"/>: <xsl:value-of select="."/>
-						</xsl:when>
-						<xsl:when test="contains ('isbn issn uri doi lccn uri', $type)">
-							<xsl:value-of select="$type"/>: <xsl:value-of select="."/>
-						</xsl:when>
-					</xsl:choose>
+					<xsl:value-of select="$type"/>: <xsl:value-of select="."/>
+				</xsl:when>
+				<xsl:when test="contains ('isbn issn uri doi lccn uri', $type)">
+					<xsl:value-of select="$type"/>: <xsl:value-of select="."/>
 				</xsl:when>
 				<xsl:otherwise>
-					<xsl:value-of select="."/>
+						<xsl:value-of select="."/>
 				</xsl:otherwise>
 			</xsl:choose>
 		</dc:identifier>
@@ -341,7 +328,7 @@
 
 	<xsl:template match="mods:location">
 		<xsl:for-each select="mods:url">
-			<dc:identifier>
+			<dc:identifier>	
 				<xsl:value-of select="."/>
 			</dc:identifier>
 		</xsl:for-each>
@@ -353,34 +340,69 @@
 		</dc:language>
 	</xsl:template>
 
-	<xsl:template match="mods:relatedItem[mods:titleInfo | mods:name | mods:identifier | mods:location]">
+	<xsl:template match="mods:relatedItem[mods:titleInfo | mods:name | mods:identifier | mods:location | mods:originInfo]">
 		<xsl:choose>
 			<xsl:when test="@type='original'">
 				<dc:source>
-					<xsl:for-each select="mods:titleInfo/mods:title | mods:identifier | mods:location/mods:url">
+					<xsl:for-each
+						select="mods:titleInfo/mods:title | mods:identifier | mods:location/mods:url">
 						<xsl:if test="normalize-space(.)!= ''">
 							<xsl:value-of select="."/>
 							<xsl:if test="position()!=last()">--</xsl:if>
 						</xsl:if>
 					</xsl:for-each>
 				</dc:source>
-			</xsl:when>
-			<xsl:when test="@type='series'"/>
+			</xsl:when> 			
+			<xsl:when test="@type='series'"/>			
+			
 			<xsl:otherwise>
 				<dc:relation>
-					<xsl:for-each select="mods:titleInfo/mods:title | mods:identifier | mods:location/mods:url">
+					<xsl:for-each
+						select="mods:titleInfo/mods:title | mods:identifier | mods:location/mods:url">
 						<xsl:if test="normalize-space(.)!= ''">
 							<xsl:value-of select="."/>
 							<xsl:if test="position()!=last()">--</xsl:if>
 						</xsl:if>
 					</xsl:for-each>
 				</dc:relation>
-			</xsl:otherwise>
+			</xsl:otherwise>		
 		</xsl:choose>
+		<xsl:for-each select="mods:originInfo/mods:publisher"> 
+			<dc:publisher>
+				<xsl:value-of select="."/>
+			</dc:publisher>
+		</xsl:for-each>	
+		<xsl:for-each select="mods:identifier">			
+			<dc:identifier>
+			<xsl:variable name="type" select="translate(@type,'ABCDEFGHIJKLMNOPQRSTUVWXYZ','abcdefghijklmnopqrstuvwxyz')"/>	
+				<xsl:value-of select="$type"/>: <xsl:value-of select="."/>
+			</dc:identifier>
+		</xsl:for-each>					
+		<!-- HK, added for Name elements under relatedItem-->
+		<xsl:for-each select="mods:name">	
+		<xsl:if test="@type='personal'">		
+			<xsl:choose>
+			<xsl:when test="mods:role/mods:roleTerm[@type='text']='author'">
+				<dc:creator>
+					<xsl:call-template name="name"/>
+				</dc:creator>
+			</xsl:when>
+			<xsl:when test="mods:role/mods:roleTerm[@type='text']!='author'">
+				<dc:contributor>
+					<xsl:call-template name="name"/>
+				</dc:contributor>
+			</xsl:when>			
+			<xsl:otherwise>
+				<dc:contributor>
+					<xsl:call-template name="name"/>
+				</dc:contributor>
+			</xsl:otherwise>
+			</xsl:choose>
+		</xsl:if>
+		</xsl:for-each>		
+		
 	</xsl:template>
-
-
-
+	
 	<xsl:template match="mods:accessCondition">
 		<dc:rights>
 			<xsl:value-of select="."/>
@@ -393,11 +415,26 @@
 				<xsl:value-of select="."/>
 				<xsl:text> </xsl:text>
 			</xsl:for-each>
+			<!-- HK, added for Name elements under relatedItem-->
+			<xsl:for-each select="mods:name/mods:namePart[not(@type)]">
+				<xsl:value-of select="."/>
+				<xsl:text> </xsl:text>
+			</xsl:for-each>
+			
 			<xsl:value-of select="mods:namePart[@type='family']"/>
+			<!-- HK, added for Name elements under relatedItem-->
+			<xsl:value-of select="mods:name/mods:namePart[@type='family']"/>
+			
 			<xsl:if test="mods:namePart[@type='given']">
 				<xsl:text>, </xsl:text>
 				<xsl:value-of select="mods:namePart[@type='given']"/>
 			</xsl:if>
+			<!-- HK, added for Name elements under relatedItem-->
+			<xsl:if test="mods:name/mods:namePart[@type='given']">
+				<xsl:text>, </xsl:text>
+				<xsl:value-of select="mods:name/mods:namePart[@type='given']"/>
+			</xsl:if>
+			
 			<xsl:if test="mods:namePart[@type='date']">
 				<xsl:text>, </xsl:text>
 				<xsl:value-of select="mods:namePart[@type='date']"/>
@@ -413,12 +450,18 @@
 				<xsl:value-of select="normalize-space(child::*)"/>
 				<xsl:text>) </xsl:text>
 			</xsl:for-each>
+			<!-- HK, added for Name elements under relatedItem-->
+			<xsl:for-each select="mods:name/mods:role[mods:roleTerm[@type='text']!='creator']">
+				<xsl:text> (</xsl:text>
+				<xsl:value-of select="normalize-space(child::*)"/>
+				<xsl:text>) </xsl:text>
+			</xsl:for-each>						
 		</xsl:variable>
 		<xsl:value-of select="normalize-space($name)"/>
 	</xsl:template>
 
 	<!-- suppress all else:-->
 	<xsl:template match="*"/>
-
-
+		
+	
 </xsl:stylesheet>
